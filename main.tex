@@ -1,0 +1,394 @@
+\documentclass[12pt,fleqn]{article}
+\usepackage{amsfonts,amsthm,amsopn,amssymb,latexsym}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage[T1]{fontenc}
+\usepackage[brazil]{babel}
+\usepackage{indentfirst}
+\usepackage{here}
+\usepackage[utf8]{inputenc}
+\usepackage[intlimits]{amsmath}
+\usepackage{subfigure}
+\usepackage{listings}
+\usepackage{color}
+
+% Dimensões da página
+\usepackage{a4}                       % tamanho da página
+\setlength{\textwidth}{16.0cm}        % largura do texto
+\setlength{\textheight}{9.0in}        % tamanho do texto (sem head, etc)
+\renewcommand{\baselinestretch}{1.15} % espaçamento entre linhas
+\addtolength{\topmargin}{-1cm}        % espaço entre o head e a margem
+\setlength{\oddsidemargin}{-0.1cm}    % espaço entre o texto e a margem
+       
+% Ser indulgente no preenchimento das linhas
+\sloppy
+
+% Colocar imagem no topo de página vazia
+\makeatletter
+    \setlength\@fptop{0\p@}
+\makeatother
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+\pagestyle {empty}
+
+% Páginas iniciais
+% capa ilustrativa
+
+\begin{figure}[!htb]
+    \centering
+    \includegraphics[scale=0.6]{fig/IFCE.jpg}
+\end{figure}
+
+{\begin{center}
+\large
+{\bf
+Instituto Federal de Educação, Ciência e Tecnologia do Ceará \\
+Campus Fortaleza\\
+Departamento de Telemática\\
+Tecnologia em Telemática\\[3cm]
+Processamento Digital de Sinais \\ 
+Prof. Ricardo Rodrigues \\
+Trabalho de Filtros Digitais: Implementação de filtros FIR e IIR } \\[3cm]
+Ideilson do Nascimento Cisne\\
+\end{center}}
+
+\vfill
+\begin{center} 
+Fortaleza - CE \\
+2019.1
+\end{center}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newpage
+\tableofcontents
+\pagestyle {plain}
+\setcounter{page}{0} \pagenumbering{arabic}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newpage
+\section{Introdução}
+\paragraph{} As operações de processamento de sinal envolvidas na construção de sistemas de comunicação, sistemas de controle, sistemas de sensoreamento remoto e instrumentos para processamento de sinais biológicos, entre as muitas aplicações de processamento de sinais, podem ser implementadas de duas maneiras fundamentalmente diferentes: (1) abordagem analógica ou de tempo contínuo e (2) abordagem digital ou de tempo discreto. A abordagem analógica ao processamento de sinais foi predominante durante muitos anos e permanece como uma opção viável para muitas aplicações. Como o nome implica, o processamento analógico de sinal recorre ao uso de elementos de circuitos analógicos como por exemplo, resistores, capacitores, indutores, amplificadores transistorizados e diodos. O processamento digital de sinal, por outro lado, recorre a três elementos de computador digitais básicos: somadores e multiplicadores (para operações aritméticas) e memória (para armazenamento).
+
+\paragraph{} O principal atributo da abordagem analógica é a capacidade natural de resolver equações diferenciais que descrevem sistemas físicos, em contrapartida, a abordagem digital recorre a computações numéricas para suas operações.
+
+\paragraph{} Em um sistema e transmissão, a função de um filtro é remover partes não desejadas do sinal, como o ruído, ou extrair partes úteis do sinal, como determinadas componentes de frequência que estão dentro do gama de frequência. Há dois tipos principais de filtro: o analógico e o digital. Eles são bastante diferentes na montagem física e em seu funcionamento.
+
+\paragraph{} A partir dessa breve introdução, o presente trabalho da disciplina de Processamento Digital de Sinais terá como objetivo principal implementar o estudo sobre os filtros digitais, técnicas, análise dos diferentes tipos de filtros e a utilização dos conceitos de filtros FIR e IIR sobre o som de uma fala humana para projetar um filtro digital com a finalidade de retirar interferências e ruídos bem como comparar os resultados.
+
+\newpage
+
+\section{Fundamentação Teórica}
+\paragraph{} Existem técnicas padrões para se projetar um circuito de filtro analógico para uma determinada aplicação. Em todas as fases do projeto a característica mais importante no circuito desse filtro é a tensão e a corrente elétrica, bem como a precisão dos componentes.
+
+\paragraph{} Já no caso de um filtro digital, este usa um processador digital para executar cálculos numéricos em valores amostrados do sinal de entrada. O processador pode ser um computador ou um DSP. Em um processo de filtragem digital, o sinal analógico deve ser primeiramente digitalizado usando um ADC.
+
+\begin{figure}[!htb]
+    \centering
+    \includegraphics[scale=0.6]{fig/figura1.png}
+    \label{figura:diagrama1}
+    \caption{Diagrama em bloco básico de um sistema de processamento de sinais digitais}
+\end{figure}
+
+\paragraph{} Isto quer dizer que, a cada intervalo de tempo previamente definido é retirada uma amostra do sinal de entrada que vai ser codificada em forma binária e este procedimento é aplicado sucessivamente a cada novo intervalo de tempo.
+
+\paragraph{} Esta amostragem é transferida ao processador que efetuar os cálculos numéricos. Estes cálculos envolvem multiplicações e soma com constantes de seus termos - produtos. Os resultados desses cálculos produzidos pelo processador agora representam valores do sinal filtrado e podem ser reconstituídos através de um DAC, o qual irá converter o sinal filtrado em um sinal na forma analógica. Note que num filtro digital, o sinal é representado por uma sucessão de números, em lugar de uma tensão ou corrente.
+
+\paragraph{} Os filtros digitais são parte importante do Processamento Digital de Sinais (PDS). Na realidade, o desempenho extraordinário deles é uma das razões fundamentais para a popularização do PDS (STEVEN, 1999).
+
+\paragraph{} Existem várias vantagens advindas da utilização de filtros digitais, entre ela:
+
+\begin{enumerate}
+    \item Um filtro digital é programável, ou seja, a sua operação é determinada por um programa armazenado na memória do processador. Isto significa que o filtro digital pode ser mudado facilmente sem afetar seu circuito eletrônico (hardware). No caso de um filtro analógico ocorre somente se mudarmos o seu circuito eletrônico;
+    
+    \item Os filtros digitais são facilmente projetados, sendo os mesmos testados e implementados em um computador ou estação de trabalho de forma simples;
+    
+    \item  As características funcionais dos circuitos de filtros analógicos (particularmente os circuitos elaborados com componentes) estão sujeitos a variação da temperatura, variação de valores devido à construção dos componentes utilizados nos circuitos, entre outros parâmetros que dependem do projeto e aplicação. Filtros digitais não sofrem estes problemas, logo são extremamente estáveis obtendo com isso resultados mais precisos.
+\end{enumerate}
+
+\paragraph{} A ordem de um filtro digital é o número de contribuições previamente armazenadas na memória do processador utilizadas para calcular a próxima componente. Sendo assim, todos os filtros digitais podem ser escritos da seguinte maneira:
+
+\textbf{Zero - ordem}
+\begin{equation}
+y(n) = a_0x_n
+\end{equation}
+
+\textbf{Primeira - ordem}
+\begin{equation}
+y(n) = a_0x_n + a_1x_{n-1}
+\end{equation}
+
+\textbf{Segunda - ordem}
+\begin{equation}
+y(n) = a_0x_n + a_1x_{n-1} + a_2x_{n-2}
+\end{equation}
+
+\paragraph{} Filtros Digitais com ordens superiores a segunda podem ser desenvolvidos usando expressões semelhantes. As componentes \textbf{a0, a1, a2,..., an} são chamadas de “Coeficientes de Filtro”. Os valores desses coeficientes é que determinam as características do filtro em particular.
+
+\paragraph{} Outra característica muito importante nos filtros digitais é a sua Função de Transferência. Esta função é obtida pela simetria da expressão do filtro, que nos permite descrever um filtro por meio de uma expressão conveniente e compacta. Pode-se usar a função de transferência de um filtro para trabalhar fora de sua resposta de frequência.
+
+\paragraph{} Os filtros são divididos em duas categorias: Filtro de resposta ao impulso finito (FIR), também conhecido como filtro de média móvel (MA) e Filtro de resposta ao impulso infinito (IIR), também conhecido como filtro de média móvel autorregressiva (ARMA). 
+\paragraph{} Um impulso é um sinal de curta duração que vai de zero a um valor máximo e volta a zero novamente em um curto espaço de tempo. A resposta ao impulso de um filtro é a resposta do filtro a um impulso e depende dos valores sobre os quais o filtro opera. Figura 2 ilustra a resposta ao impulso.
+
+\begin{figure}[!htb]
+    \centering
+    \includegraphics[scale=0.4]{fig/figura2.png}
+    \label{figura:grafico}
+    \caption{Resposta ao Impulso}
+\end{figure}
+
+\paragraph{} A transformada de Fourier da resposta ao impulso é a resposta em frequência do filtro. A resposta de frequência de um filtro fornece informações sobre a saída do filtro em diferentes frequência. Em outras palavras, a resposta de frequência de um filtro reflete o ganho do filtro em diferentes frequência. Para um filtro ideal, o ganho é um na banda passante e zero na banda final. Um filtro ideal passa todas as frequências na banda passante para a saída inalterada, mas não passa nenhuma das frequências na banda limite para a saída.
+
+\subsection{Filtro FIR}
+\paragraph{} Os filtros de resposta ao impulso finito (FIR) são filtros digitais que têm uma resposta de impulso finita. Os filtros FIR operam apenas nos valores de entrada atuais e passados e são os filtros mais simples de projetar. Os filtros FIR também são conhecidos como filtros não-recursivos, filtros de convolução e filtros de média móvel (MA). Os filtros FIR realizam uma convolução dos coeficientes do filtro com uma sequência de valores de entrada e produzem uma sequência igualmente numerada de valores de saída. A equação 4 define a equação de diferença que um filtro FIR executa.\\
+
+\textbf{Equação de Diferença}
+\begin{equation}
+y[n] = b_0x[n] + b_1x[n-1] + ... + b_mx[n-m]
+\end{equation}
+
+\textbf{Função de Transferência}
+\begin{equation}
+H(z) = b_0 + b_1z^{-1} + ... + b_nz^{-n}
+\end{equation}
+
+\textbf{Resposta em Frequência}
+\begin{equation}
+H(e^{j\Omega}) = b_0 + b_1e^{-j\Omega} + ... + b_ne^{-j\Omega n}
+\end{equation}
+
+\textbf{Resposta ao Impulso}
+\begin{equation}
+h[n] = b_0\delta + b_1\delta[n-1] + ... + b_m\delta[n-m]
+\end{equation}
+
+\paragraph{} Os filtros FIR possuem as seguintes características:
+\begin{enumerate}
+    \item Possui resposta ao impulso finita. 
+    \item São Bibos estáveis.
+    \item Implementam resposta em fase linear.
+    \\
+\end{enumerate}
+
+\paragraph{} Abaixo, na Figura 3, encontra-se a estrutura básica de um filtro FIR.
+
+\begin{figure}[!htb]
+    \centering
+    \includegraphics[scale=0.5]{fig/figura3.png}
+    \label{figura:diagrama2}
+    \caption{Estrutura Básica de um Filtro FIR}
+\end{figure}
+
+\paragraph{} Há situações em que o sinal analógico com características periódicas pode apresentar anormalidade em uma das extremidades após a aplicação da Transformada de Fourier, resultando em descontinuidades nas suas extremidades.
+\paragraph{} Janelamento, ou simplesmente janela, é a técnica para aumentar as características espectrais de um sinal amostrado, esta técnica minimiza as margens de transição em formas de ondas truncadas.
+\paragraph{} A janela consiste em aplicar uma função matemática, que depende do tipo de janela, ao sinal. O espectro de um sinal após o janelamento é o resultado da convolução do espectro do sinal original com o espectro da janela. Há vários tipos de janelas, apresentadas logo a seguir, e uso de um determinado tipo de janela dependerá da aplicação a ser filtrada.
+
+\subsubsection{Métodos das janelas Retangular}
+\paragraph{} A janela retangular possui valor igual a 1 em todo o seu intervalo de tempo. É a janela com maior perda espectral. Indicada para análise de transientes com duração menor que a da janela em análise.
+
+\subsubsection{Métodos das janelas Triangular}
+\paragraph{} A janela de Bartlett (Fejer, Cesaro ou como mais conhecidamente triangular) é inferior se comparada a janela de Hanning. Como o próprio nome indica a sua forma é de uma onda triangular.
+
+\subsubsection{Métodos das janelas Hanning}
+\paragraph{} Possui forma similar ao meio ciclo de uma onda cossenoidal e é útil para análise de transientes maiores que o tempo de duração da janela, bem como para aplicações de objetivos gerais. A janela Hanning força as extremidades ao valor zero.
+
+\subsubsection{Métodos das janelas Hamming}
+\paragraph{} Geralmente a mais utilizada de todas, a janela de Hamming possui a menor magnitude do lóbulo lateral para uma dada largura de lóbulo principal. Possui forma quase idêntica a da janela de Hanning, entretanto as extremidades da janela de Hamming não se aproximam do zero.
+
+\subsection{Filtro IIR}
+\paragraph{} Os filtros de resposta ao impulso infinito (IIR), também conhecidos como filtros recursivos e filtros de média móvel autorregressiva (ARMA), operam com valores de entrada atuais e passados e valores de saída atuais e passados. A resposta ao impulso de um filtro IIR é a resposta do filtro geral IIR a um impulso, como a Equação 3-1 define impulso. Teoricamente, a resposta ao impulso de um filtro IIR nunca chega a zero e é uma resposta infinita. A seguinte equação de diferença geral caracteriza os filtros IIR.\\
+
+\textbf{Equação de Diferença}
+\begin{equation}
+b_0x[n] + b_1x[n-1] + ... + b_mx[n-m] = y[n] + a_1y[n-1] + ... + a_my[n-m]
+\end{equation}
+
+\textbf{Função de Transferência}
+\begin{equation}
+H(z) = \frac{b_0 + b_1z^{-1} + ... + b_mz^{-m}}{1 + a_1z^{-1} + ... + a_nz^{-n}}
+\end{equation}
+
+\textbf{Resposta em Frequência}
+\begin{equation}
+H(e^{j\Omega}) = \frac{b_0 + b_1e^{-j\Omega} + ... + b_me^{-j\Omega m}}{1 + a_1e^{-j\Omega} + ... + a_ne^{-j\Omega n}}
+\end{equation}
+
+\paragraph{} Os filtros IIR possuem as seguintes características:
+\begin{enumerate}
+    \item Possui resposta ao impulso infinita. 
+    \item A estabilidade depende da posição dos pólos.
+    \item Não implementam resposta em fase linear.
+    \item Para um mesmo grau de aproximação, precisam de uma ordem menor em comparação a um FIR.
+    \\
+\end{enumerate}
+
+\paragraph{} Abaixo, na Figura 4, encontra-se a estrutura básica de um filtro IIR.
+
+\begin{figure}[!htb]
+    \centering
+    \includegraphics[scale=0.9]{fig/figura4.png}
+    \label{figura:diagrama3}
+    \caption{Estrutura Básica de um Filtro IIR}
+\end{figure}
+
+\subsubsection{Butterworth}
+\paragraph{} O filtro Butterworth é um tipo de projeto de filtros eletrônicos. Ele é desenvolvido de modo a ter uma resposta em frequência o mais plana o quanto for matematicamente possível na banda passante(menor ripple).
+
+\paragraph{} Os filtros Butterworth têm as seguintes características:
+\begin{enumerate}
+    \item Resposta suave em todas as frequência. 
+    \item Diminuição monotônica das frequência de corte especificadas.
+    \item Planicidade máxima, com a resposta ideal de unidade na banda passante e zero na banda de parada.
+    \item frequência de meia potência ou 3 dB baixa frequência, que corresponde às frequência de corte especificadas. A vantagem dos filtros Butterworth é sua resposta de frequência suave e monotônica decrescente.
+\end{enumerate}{}
+
+\paragraph{} A figura 5 mostra a resposta de frequência de um filtro Butterworth lowpass.
+
+\begin{figure}[!htb]
+    \centering
+    \includegraphics[scale=0.6]{fig/figura5.png}
+    \label{figura:figura1}
+    \caption{Resposta de Frequência de um Filtro Lowpass Butterworth}
+\end{figure}
+
+\paragraph{} Os filtros Butterworth nem sempre fornecem uma boa aproximação da resposta ideal do filtro, devido à lenta rolagem entre a banda passante e a banda de parada.
+
+\subsubsection{Chebyshev I}
+Os filtros Chebyshev são filtros analógicos ou digitais que possuem um aumento na atenuação (roll-off) e uma maior ondulação (ripple) na banda passante que os Filtros Butterworth. Os filtros Chebyshev possuem a propriedade de minimizarem o erro entre as características do filtro idealizado e o atual com relação à faixa do filtro, porém com ripples na banda passante. Este tipo de filtro recebeu seu nome em honra a Pafnuty Chebyshev, devido a suas características matemáticas serem derivadas dos polinômios de Chebyshev.
+
+\paragraph{} Os filtros Chebyshev possuem as seguintes características:
+\begin{enumerate}
+    \item Minimização do erro de pico na faixa de passagem.
+    \item Resposta de magnitude Equiripple na banda passante.
+    \item Resposta de magnitude decrescente monotônica na banda de parada.
+    \item Rolloff mais nítido que os filtros Butterworth.
+\end{enumerate}{}
+
+\paragraph{} Comparado a um filtro Butterworth, um filtro Chebyshev pode alcançar uma transição mais nítida entre a banda passante e a banda de parada com um filtro de ordem inferior. A transição brusca entre a banda passante e a banda de parada de um filtro Chebyshev produz menores erros absolutos e velocidades de execução mais rápidas do que um filtro Butterworth.
+
+\paragraph{} A figura 6 mostra a resposta de frequência de um filtro Chebyshev lowpass.
+
+\begin{figure}[!htb]
+    \centering
+    \includegraphics[scale=0.5]{fig/figura6.png}
+    \label{figura:figura2}
+    \caption{Resposta de Frequência de um Filtro Chebyshev Lowpass}
+\end{figure}
+
+\paragraph{} O erro máximo tolerável restringe a resposta equivocada na banda passante. Além disso, o roll off nítido aparece na banda de parada.
+
+\subsubsection{Chebyshev II}
+\paragraph{} Também conhecidos como Chebyshev invertidos, este tipo é menos comum pois ele não apresenta um roll off tão acentuado quanto o tipo I, e requer uma maior quantidade de componentes. Ele não possui ripple em sua banda passante, porém possui ripple na sua banda atenuada.
+
+\paragraph{} Os filtros Chebyshev II possuem as seguintes características:
+\begin{enumerate}
+    \item Minimização do erro de pico na banda de parada.
+    \item Resposta de magnitude Equiripple no stopband.
+    \item Resposta de magnitude decrescente monotônica na faixa de passagem.
+    \item Roll off mais nítido que os filtros Butterworth.
+\end{enumerate}
+
+\paragraph{} Os filtros Chebyshev II são semelhantes aos filtros Chebyshev. No entanto, os filtros Chebyshev II diferem dos filtros Chebyshev das seguintes maneiras:
+
+\begin{enumerate}
+    \item Os filtros Chebyshev II minimizam o erro de pico na banda de parada em vez da banda passante. Minimizar o erro de pico na banda de parada em vez da banda passante é uma vantagem dos filtros Chebyshev II sobre os filtros Chebyshev.
+    \item Os filtros Chebyshev II têm uma resposta de magnitude equivocada na banda de interrupção, em vez da banda passante.
+    \item Os filtros Chebyshev II têm uma resposta de magnitude monotonicamente decrescente na faixa de passagem em vez da banda de parada.
+\end{enumerate}
+
+\newpage
+\paragraph{} A figura 7 mostra a resposta de frequência de um filtro Chebyshev II lowpass.
+
+\begin{figure}[!htb]
+    \centering
+    \includegraphics[scale=0.6]{fig/figura7.png}
+    \label{figura:figura3}
+    \caption{Resposta de Frequência de um Filtro Chebyshev II Lowpass}
+\end{figure}
+
+\paragraph{} O erro máximo tolerável restringe a resposta equivocada na banda de parada. Além disso, o suave rolloff monótono aparece no stopband.
+
+\paragraph{} Os filtros Chebyshev II têm a mesma vantagem sobre os filtros Butterworth que os filtros Chebyshev têm - uma transição mais nítida entre a banda passante e a banda de parada com um filtro de ordem inferior, resultando em um erro absoluto menor e velocidade de execução mais rápida.
+
+\subsubsection{Elíptico}
+\paragraph{} Um filtro elíptico (também conhecido como filtro de Cauer) é um filtro com ondulações (ripple) na banda passante e na banda rejeitada. 
+
+\paragraph{} Os filtros elípticos possuem as seguintes características:
+\begin{enumerate}
+    \item Minimização do erro de pico na banda passante e na banda de parada.
+    \item Equivalentes na banda passante e na banda de parada.
+    \\
+\end{enumerate}
+\newpage
+\paragraph{} Comparados com os mesmos filtros Butterworth ou Chebyshev, os filtros elípticos fornecem a transição mais nítida entre a faixa de passagem e a banda de parada, o que explica seu amplo uso.
+\\
+\paragraph{} A figura 8 mostra a resposta de frequência de um filtro elíptico de baixa passagem.
+
+\begin{figure}[!htb]
+    \centering
+    \includegraphics[scale=0.6]{fig/figura8.png}
+    \label{figura:figura4}
+    \caption{Resposta de Frequência de um Filtro Elíptico Lowpass}
+\end{figure}
+
+\paragraph{} O mesmo erro máximo tolerável restringe a ondulação na banda passante e na banda de parada. Além disso, mesmo os filtros elípticos de baixa ordem têm uma borda de transição nítida.
+\newpage
+\paragraph{} Aqui temos na figura 9, uma imagem mostrando a resposta em frequência do filtro elíptico ao lado das respostas de outros tipos comuns de filtros obtidos com o mesmo número de coeficientes: 
+
+\begin{figure}[!htb]
+    \centering
+    \includegraphics[scale=0.6]{fig/figura9.png}
+    \label{figura:figura5}
+    \caption{Comparação das Respostas em Frequência dos Filtros}
+\end{figure}
+
+\subsubsection{Notch}
+\paragraph{} Um filtro Notch, também conhecido como rejeita-faixa ou filtro de rejeição de banda é um filtro que permite a passagem da maioria das frequências inalteradas, porém atenua aquelas que estejam em uma faixa determinada pelo filtro, ou seja elimina uma frequência específica. O princípio de funcionamento é o oposto do filtro passa-faixa.
+
+\paragraph{} A figura 10 mostra a resposta de frequência de um filtro Notch.
+
+\begin{figure}[!htb]
+    \centering
+    \includegraphics[scale=0.6]{fig/figura10.png}
+    \label{figura:figura6}
+    \caption{Resposta em Frequência do Filtro Notch}
+\end{figure}
+
+\subsubsection{Método da Transformação Bilinear}
+\paragraph{} Os Planos S(analógica) e Z(usada em sistemas digitais) são ambos complexos. A Transformação Bilinear é um tipo de mapeamento conforme que mapeia pontos de um plano no outro. Os pontos sobre o eixo imaginário do Plano S são mapeados sobre círculo de raio unitário do Plano Z - estas duas regiões são as que estão marcadas nos gráficos apresentados. A região à esquerda do eixo imaginário no Plano S é mapeada dentro do círculo de raio unitário no Plano Z.
+
+\section{Metodologia e Apresentação de Resultados}
+\paragraph{} O presente trabalho foi desenvolvido a partir de uma máquina com sistema operacional Linux de distribuição Mint 19.1, com uso de um software de processamento de sinais e sistema computacional e numérica, Octave na versão 4.2.2, para a aplicação dos filtros através de script.
+\paragraph{} O presente áudio a ser trabalhado contém uma mistura de ruído, sirene e uma voz humana. Será analisado o espectro do sinal e utilizar os filtros digitais disponíveis para assim então obter um áudio filtrado sem os ruídos e sirene até que a voz humana fique mais clara e interpretada.
+
+\subsection{Análise espectral}
+\subsection{Projeto do Filtro IIR}
+\subsection{Resposta em Frequência do filtro}
+\subsection{Resposta ao Impulso}
+\subsection{Coeficientes do Filtro}
+
+\subsection{Análise espectral}
+\subsection{Projeto do Filtro FIR}
+\subsection{Resposta em Frequência do filtro}
+\subsection{Resposta ao Impulso}
+\subsection{Coeficientes do Filtro}
+
+\section{Conclusão}
+\subsection{Comparando filtros FIR e IIR} 
+
+\paragraph{}Como projetar filtros digitais envolve fazer concessões para enfatizar uma característica de filtro desejável em detrimento de uma característica menos desejável, comparar filtros FIR e IIR pode ajudar a guiar você na seleção do design de filtro apropriado para uma aplicação específica.Filtros IR podem atingir o mesmo nível de atenuação que FIR filtros, mas com muito menos coeficientes. Portanto, um filtro IIR pode fornecer uma operação de filtragem significativamente mais rápida e eficiente do que um filtro FIR. É possível projetar filtros FIR para fornecer uma resposta de fase linear. Os filtros IIR fornecem uma resposta de fase não linear. Use filtros FIR para aplicativos que exigem respostas de fase linear. Use filtros IIR para aplicativos que não exigem informações de fase, como aplicativos de monitoramento de sinal. Consulte a seção Seleção de um filtro digital neste capítulo para obter mais informações sobre como selecionar um tipo de filtro digital.
+
+\newpage
+\addcontentsline{toc}{section}{Referências}
+\nocite{*} % Imprime todas as referências mesmo não citadas
+\bibliographystyle{unsrt}
+\bibliography{bibliografia}
+
+
+\newpage
+\section{Anexos}
+
+\end{document}
